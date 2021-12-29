@@ -1,0 +1,164 @@
+CREATE TABLE IF NOT EXISTS Items(
+	ItemNum 	INT(11) NOT NULL AUTO_INCREMENT,
+	SerialNum 	VARCHAR(50) NOT NULL,	
+	ShortName 	VARCHAR(75) NOT NULL,
+	Cost 		DECIMAL(10,2) NOT NULL DEFAULT '0.00',
+	NumInStock 	SMALLINT(6) NOT NULL DEFAULT 1,
+
+	PRIMARY KEY (ItemNum),
+	INDEX SerialNum (SerialNum)
+    );
+
+CREATE TABLE IF NOT EXISTS Repairmen(
+	RepairmanID INT(11) 	NOT NULL AUTO_INCREMENT,
+	LastName 	VARCHAR(50) NOT NULL,	
+	FirstName 	VARCHAR(50) NOT NULL,	
+	mobile 		VARCHAR(14) NOT NULL,
+	MI 		 	CHAR(1) 	DEFAULT NULL,
+	Email 		VARCHAR(75) DEFAULT NULL,
+	HTel 		VARCHAR(14) DEFAULT NULL,
+	Extension 	VARCHAR(5),
+
+	PRIMARY KEY (RepairmanID),
+	INDEX Fullname (LastName, FirstName)
+);
+
+CREATE TABLE IF NOT EXISTS Customers(
+	CustomerID 	INT(11) 	NOT NULL AUTO_INCREMENT,
+	LastName 	VARCHAR(50) NOT NULL,	
+	FirstName 	VARCHAR(50) NOT NULL,	
+	mobile 		VARCHAR(14) NOT NULL,
+	MI 		 	CHAR(1) 	DEFAULT NULL,
+	Email 		VARCHAR(75) DEFAULT NULL,
+	HTel 		VARCHAR(14) DEFAULT NULL,
+	AddressLine1 VARCHAR(75) NOT NULL,
+	AddressLine2 VARCHAR(75) DEFAULT NULL,
+	City 		VARCHAR(50) NOT NULL,
+	State 		VARCHAR(50) NOT NULL,
+	ZIP 		VARCHAR(10) NOT NULL,
+	Extension 	VARCHAR(5),
+
+	PRIMARY KEY (CustomerID),
+	INDEX Fullname (LastName, FirstName),
+	INDEX ZIP (ZIP)
+);
+
+
+CREATE TABLE IF NOT EXISTS Computers(
+	ComputerID 	INT(11) NOT NULL AUTO_INCREMENT,
+	SerialNum 	VARCHAR(50) NOT NULL,	
+	Make 		VARCHAR(50) NOT NULL,
+	Model 		VARCHAR(50) DEFAULT NULL,
+	Descrption 	VARCHAR(255) DEFAULT NULL,
+	CustomerID 	INT(11) NOT NULL,
+
+	PRIMARY KEY (ComputerID),
+	INDEX SerialNum (SerialNum),
+	FOREIGN KEY CustomerID (CustomerID) 
+				REFERENCES Customers (CustomerID) 
+				ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+
+CREATE TABLE IF NOT EXISTS Deposits(
+	DepositNum 	INT(11) NOT NULL AUTO_INCREMENT,
+	DepositDate DATE 	NOT NULL,
+	Amount 		INT(12) NOT NULL DEFAULT 0,
+	ItemNum 	INT(11) NOT NULL,
+
+	PRIMARY KEY DepositNum (DepositNum),
+	FOREIGN KEY ItemNum (ItemNum) 
+				REFERENCES Items (ItemNum) 
+				ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+
+CREATE TABLE IF NOT EXISTS Payment(
+	PymentNum 	INT(11) NOT NULL AUTO_INCREMENT,
+	PaymentDate DATE 	NOT NULL,
+	Amount 		INT(12) NOT NULL DEFAULT 0,
+	ItemNum 	INT(11) NOT NULL,
+
+	PRIMARY KEY PymentNum (PymentNum),
+	FOREIGN KEY ItemNum (ItemNum) 
+				REFERENCES Items (ItemNum)
+				ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS RepairJobs(
+	JobNum 			INT(11) NOT NULL AUTO_INCREMENT,
+	DateReceived 	DATE NOT NULL,	
+	DatetoReturn 	DATE NOT NULL,	
+	DateReturned 	DATE NOT NULL,	
+	RepairDetails 	VARCHAR(255) ,
+	LaborCost 		DECIMAL(10,2) NOT NULL DEFAULT '0.00',
+	TotalCost 		DECIMAL(10,2) NOT NULL DEFAULT '0.00',
+	CustomerID 		INT(11) NOT NULL,
+	ComputerID 		INT(11) NOT NULL,
+
+	PRIMARY KEY (JobNum),
+	
+	INDEX DateReceived (DateReceived),
+	INDEX DatetoReturn (DatetoReturn),
+	INDEX DateReturned (DateReturned),
+	
+	FOREIGN KEY CustomerID (CustomerID) 
+				REFERENCES Customers (ComputerID) 
+				ON UPDATE CASCADE ON DELETE RESTRICT,
+	FOREIGN KEY ComputerID (ComputerID) 
+				REFERENCES Computers (ComputerID) 
+				ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS RepairJobRepairmen(
+	JobNum 			INT(11) NOT NULL,
+	RepairmenId 	INT(11) NOT NULL,
+	DateStarted 	DATE 	NOT NULL,	
+	DateEnded   	DATE 	NOT NULL,	
+	TotalCost 		DECIMAL(10,2) NOT NULL DEFAULT '0.00',
+	Comment 		TEXT 	DEFAULT NULL,
+
+	PRIMARY KEY (JobNum,RepairmenId),
+	
+	FOREIGN KEY RepairmenId (RepairmenId) 
+				REFERENCES Repairmen (RepairmanID) 
+				ON UPDATE CASCADE ON DELETE RESTRICT,
+	FOREIGN KEY JobNum (JobNum) 
+				REFERENCES RepairJobs (JobNum) 
+				ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+
+CREATE TABLE IF NOT EXISTS RepairmenItems(
+	ItemNum 		INT(11) NOT NULL,
+	RepairmenId 	INT(11) NOT NULL,
+	DateOrdered 	DATE 	DEFAULT NULL,	
+	Quantity  		INT(6) NOT NULL DEFAULT 1,
+	TotalCost 		DECIMAL(10,2) NOT NULL DEFAULT '0.00',
+
+	PRIMARY KEY (ItemNum,RepairmenId),
+	
+	FOREIGN KEY RepairmenId (RepairmenId) 
+				REFERENCES Repairmen (RepairmanID) 
+				ON UPDATE CASCADE ON DELETE RESTRICT,
+	FOREIGN KEY Items (ItemNum) 
+				REFERENCES Items (ItemNum) 
+				ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS RepairJobItems(
+	ItemNum 		INT(11) NOT NULL,
+	JobNum 		 	INT(11) NOT NULL,
+	DateUsed 	 	DATE 	DEFAULT NULL,	
+	Quantity  		INT(6) NOT NULL DEFAULT 1,
+	TotalCost 		DECIMAL(10,2) NOT NULL DEFAULT '0.00',
+
+	PRIMARY KEY (ItemNum,JobNum),
+	
+	FOREIGN KEY JobNum (JobNum) 
+				REFERENCES RepairJobs (JobNum) 
+				ON UPDATE CASCADE ON DELETE RESTRICT,
+	FOREIGN KEY Items (ItemNum) 
+				REFERENCES Items (ItemNum) 
+				ON UPDATE CASCADE ON DELETE RESTRICT
+);
